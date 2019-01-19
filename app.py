@@ -91,7 +91,7 @@ def register(name):
 def Questions(res, diff):
     score = 0
     streak = 0
-    numbers = ["1","2","3","4"]
+    options = ["a","b","c","d"]
     os.system("mpg123 Voice/qnaIntro.mp3")
     for i in range(5):
         while True:
@@ -99,16 +99,16 @@ def Questions(res, diff):
             optionList = res[i]["incorrect_answers"]
             optionList.insert(randrange(len(optionList)+1), res[i]["correct_answer"])
             for j in range(4):
-                speak("Option number "+str(j+1)+" is......"+ optionList[j]+"......")
-            speak("Choose your answer.......")
+                speak("Option number "+options[j]+" is......"+ optionList[j]+"......")
+            os.system("mpg123 Voice/chooseAns.mp3")
             ans = listen()
             if ans == "repeat":
-                speak("Okay.....")
+                os.system("mpg123 Voice/okay.mp3")
                 continue
-            if ans not in numbers:
+            if ans not in options:
                 os.system("mpg123 tryAgain.mp3")
                 continue
-            if optionList[numbers.index(ans)] == res[i]["correct_answer"]:
+            if optionList[options.index(ans)] == res[i]["correct_answer"]:
                 if diff == "easy":
                     score += (streak + 1)
                     streak += 1
@@ -118,10 +118,10 @@ def Questions(res, diff):
                 else:
                     score += (streak + 5)
                     streak += 3
-                speak ("You, my friend, are really special!!!!")
+                os.system("mpg123 Voice/correctAns.mp3")
                 break
             else:
-                speak ("Maybe your guesswork didn't work this time....")
+                os.system("mpg123 Voice/incorrectAns.mp3")
                 streak = 0
                 break
     speak ("Your overall score in this round is "+str(score))
@@ -129,8 +129,10 @@ def Questions(res, diff):
     c = conn.cursor()
     global user
     c.execute("UPDATE challengers SET Score = Score + ? WHERE Username = ?", (score, user,))
+    conn.commit()
     c.close()
     conn.close()
+    os.system("mpg123 Voice/redirect.mp3")
 
 img = cv2.imread("black.jpg")
 cv2.namedWindow("image", cv2.WND_PROP_FULLSCREEN)
@@ -168,11 +170,12 @@ while True:
         user = ""
         break
     elif choice in posCredits:
-        pass
+        os.system("mpg123 Voice/credits.mp3")
+        os.system("mpg123 Voice/redirect.mp3")
     elif choice in posLead:
         conn = sqlite3.connect("Challengers.db")
         c = conn.cursor()
-        c.execute("SELECT * FROM challengers ORDER BY Score")
+        c.execute("SELECT * FROM challengers ORDER BY Score DESC")
         allUsers = c.fetchall()
         print(allUsers)
         print(user)
@@ -187,6 +190,7 @@ while True:
         mov = ""
         choice = "no"
         while choice != "yes":
+            mov = ""
             while mov != "Up":
                 speak(Categs[i])
                 mov = main.dir()
@@ -196,6 +200,8 @@ while True:
                 elif mov == "Right":
                     if i != 0: i -= 1
                     else: i = 4
+                #if input() == "z":
+                 #   break
             speak("You have chosen "+Categs[i]+"..... Do you confirm...... Yes or no.......")
             choice = listen()
             if choice == "no":
@@ -211,7 +217,7 @@ while True:
             choice = listen()
             att += 1
 
-        response = requests.get("https://opentdb.com/api.php?amount=5&category=" + str(dic[Categs[i]]) +"&difficulty="+choice)
+        response = requests.get("https://opentdb.com/api.php?amount=5&category=" + str(dic[Categs[i]]) +"&difficulty="+choice+"&type=multiple")
         data = response.json()
         result = data["results"]
         print(result)
